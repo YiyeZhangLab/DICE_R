@@ -1,3 +1,31 @@
+#' Analyze P-Value and Outcome Ratios for Clusters
+#'
+#' This function performs an analysis of p-values and outcome ratios related to clusters in a dataset. It calculates the ratio of positive outcomes within each cluster and computes p-values for the association between clusters and the outcome variable.
+#'
+#' @param data_train A list representing the training data. This list must include the following components:
+#' \itemize{
+#'   \item \code{C}: An integer vector of cluster assignments for each sample.
+#'   \item \code{data_v}: A matrix or data frame of additional covariates.
+#'   \item \code{data_y}: A binary response vector with values 0 or 1, representing the outcome variable.
+#' }
+#' @param num_clusters An integer specifying the number of clusters in the data.
+#' @param if_check A logical value indicating whether to print intermediate steps for debugging purposes. Default is \code{FALSE}.
+#'
+#' @return A list containing the following components:
+#' \itemize{
+#'   \item \code{dict_outcome_ratio}: A numeric vector representing the ratio of positive outcomes (where \code{data_y} equals 1) within each cluster.
+#'   \item \code{dict_p_value}: A list of p-values, with each element corresponding to a pair of clusters. The p-values are calculated using a likelihood ratio test for the association between the clusters and the outcome variable.
+#' }
+#'
+#' @details
+#' The \code{analysis_p_value_related} function performs the following steps:
+#' \enumerate{
+#'   \item Converts the cluster assignments into a one-hot encoded matrix and counts the occurrences of each cluster.
+#'   \item Calculates the ratio of positive outcomes within each cluster.
+#'   \item Combines the cluster one-hot encodings with additional covariates to create a matrix of predictor variables.
+#'   \item Iteratively removes one or two clusters from the predictor matrix and calculates the p-value for the remaining clusters using the \code{\link{p_value_calculate}} function.
+#' }
+
 p_value_calculate <- function(X, y, is_intercept, X_null = NULL) {
   full_model <- glm(y ~ X, family = binomial())
   alt_log_likelihood <- logLik(full_model)
