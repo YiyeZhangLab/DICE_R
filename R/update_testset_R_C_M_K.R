@@ -43,25 +43,30 @@ update_testset_R_C_M_K <- function(args, model, data_test, dataloader_test, data
   while (dataloader_test$has_next()) {
     #### <-------------
     #batch <- dataloader_test$next()
-    batch_idx <- batch[[1]]
-    batch_data <- batch[[2]]
-    index <- batch_data[[1]]
-    batch_xvy <- batch_data[[2]]
-    batch_c <- batch_data[[3]]
+    #batch_idx <- batch[[1]]
+    #batch_data <- batch[[2]]
+    #index <- batch_data[[1]]
+    #batch_xvy <- batch_data[[2]]
+    #batch_c <- batch_data[[3]]
 
-    data_x <- batch_xvy[[1]]
-    data_v <- batch_xvy[[2]]
-    target <- batch_xvy[[3]]
+    batch_iter <- dataloader_test$.iter()  # Create an iterator
+    batch_idx  <- batch_iter$.next()  # Get the first batch
+    data_x <- batch_idx
 
-    data_x <- torch_tensor(data_x, requires_grad = FALSE)
-    data_v <- torch_tensor(data_v, requires_grad = FALSE)
-    target <- torch_tensor(target, requires_grad = FALSE)
 
-    if (args$cuda) {
-      data_x <- data_x$cuda()
-      data_v <- data_v$cuda()
-      target <- target$cuda()
-    }
+    #data_x <- batch_xvy[[1]]
+    #data_v <- batch_xvy[[2]]
+    #target <- batch_xvy[[3]]
+
+    #data_x <- torch_tensor(data_x, requires_grad = FALSE)
+    #data_v <- torch_tensor(data_v, requires_grad = FALSE)
+    #target <- torch_tensor(target, requires_grad = FALSE)
+
+    #if (args$cuda) {
+    #  data_x <- data_x$cuda()
+    #  data_v <- data_v$cuda()
+    #  target <- target$cuda()
+    #}
 
     # Perform a forward pass through the model in autoencoder mode
     output <- model$forward(data_x, "autoencoder")
