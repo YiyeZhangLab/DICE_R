@@ -36,40 +36,27 @@ test_AE <- function(args, model, dataloader_test) {
   # Set the model to evaluation mode
   model$eval()
 
-  for (batch in length(dataloader_test)) {
-    batch_idx <- batch
-    #batch_idx <- batch[[1]]
-    batch_data <- dataloader_test[[batch]][[2]]
-    #batch_data <- batch[[2]]
-    index <- dataloader_test[[batch]][[1]]
-    batch_xvy <- batch_data[[2]]
-    batch_c <- batch_data[[3]]
+  suppressWarnings( {
+    for (batch in 1:length(dataloader_test)) {
+      # To get the batch data, use an iterator
+      batch_iter <- dataloader_test$.iter()  # Create an iterator
+      batch_idx  <- batch_iter$.next()  # Get the first batch
+      data_x <- batch_idx[[1]]
+      data_x <- torch_tensor(data_x, requires_grad = FALSE)
+      data_x <- data_x$unsqueeze(1)
 
-    data_x <- batch_xvy[[1]]
-    data_v <- batch_xvy[[2]]
-    target <- batch_xvy[[3]]
+      # Perform a forward pass through the model in autoencoder mode
+      output <- model$forward(data_x, "autoencoder")
+      enc <- output[[1]]
+      pred <- output[[2]]
 
-    data_x <- torch_tensor(data_x, requires_grad = FALSE)
-    data_v <- torch_tensor(data_v, requires_grad = FALSE)
-    target <- torch_tensor(target, requires_grad = FALSE)
+      # Compute the loss
+      loss <- criterion_MSE(data_x, pred)
 
-    if (args$cuda) {
-      data_x <- data_x$cuda()
-      data_v <- data_v$cuda()
-      target <- target$cuda()
+      # Append the loss to the test_error list
+      test_error <- c(test_error, as.numeric(loss$item()))
     }
-
-    # Perform a forward pass through the model in autoencoder mode
-    output <- model$forward(data_x, "autoencoder")
-    enc <- output[[1]]
-    pred <- output[[2]]
-
-    # Compute the loss
-    loss <- criterion_MSE(data_x, pred)
-
-    # Append the loss to the test_error list
-    test_error <- c(test_error, as.numeric(loss$item()))
-  }
+  } )
 
   # Compute the mean test error
   test_AE_error <- mean(test_error)

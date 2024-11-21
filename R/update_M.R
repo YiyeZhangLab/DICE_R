@@ -48,7 +48,11 @@ update_M <- function(data_train) {
     }
     embed_list <- torch_stack(dict_c_embedding[[c_key]], dim = 1)
     embed_mean_dim0 <- torch_mean(embed_list, dim = 2)
-    data_train$M[, c_key] <- embed_mean_dim0
+
+    # Calculate the mean along dimension 1 (rows), keeping only 4 values (one for each column)
+    mean_values <- torch_mean(embed_mean_dim0, dim = 1)
+
+    data_train$M[, c_key] <- mean_values
   }
   cat("    update M!\n")
 }

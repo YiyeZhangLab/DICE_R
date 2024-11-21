@@ -6,9 +6,20 @@
 \usage{
 DecoderRNN(input_size, nhidden, nlayers, dropout)
 }
+\arguments{
+\item{input_size}{A numeric value representing the number of features in the input data.}
+
+\item{nhidden}{A numeric value representing the number of hidden units in each LSTM layer.}
+
+\item{nlayers}{A numeric value indicating the number of LSTM layers.}
+
+\item{dropout}{A numeric value between 0 and 1 indicating the dropout probability to be applied between LSTM layers.}
+}
+\value{
+A tensor representing the output sequence, flipped along the sequence dimension.
+}
 \description{
-An RNN-based decoder module using Long Short-Term Memory (LSTM) architecture, implemented with the \code{torch} package.
-This module is designed to process sequential data during the decoding phase in tasks like sequence-to-sequence modeling.
+A neural network module implementing a decoder using an LSTM architecture, based on the \code{torch} package. This module is typically used in sequence-to-sequence tasks during the decoding phase.
 }
 \section{Usage}{
 
@@ -31,7 +42,7 @@ DecoderRNN <- nn_module(
 
 \describe{
 \item{\code{initialize(input_size, nhidden, nlayers, dropout)}}{
-Initializes the DecoderRNN module.
+Initializes the \code{DecoderRNN} module.
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{\\itemize\{
   \\item\{\code{input_size}: A numeric value representing the number of features in the input data.\}
@@ -44,10 +55,10 @@ Initializes the DecoderRNN module.
 }
 
 \item{\code{forward(x, h)}}{
-Executes the forward pass of the DecoderRNN module.
+Executes the forward pass of the \code{DecoderRNN} module.
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{\\itemize\{
-  \\item\{\code{x}: A tensor of shape (batch_size, sequence_length, input_size) representing the input data.\}
+  \\item\{\code{x}: A tensor of shape \code{(batch_size, sequence_length, input_size)} representing the input data.\}
   \\item\{\code{h}: A list containing the hidden state (\code{hn}) and cell state (\code{cn}) from the LSTM, typically passed from the encoder or previous decoder step.\}
 \}
 

@@ -48,12 +48,19 @@
 #'     }
 #'   }
 #' }
+#'
+#' @param input_size A numeric value representing the number of features in the input data.
+#' @param nhidden A numeric value representing the number of hidden units in each LSTM layer.
+#' @param nlayers A numeric value indicating the number of LSTM layers.
+#' @param dropout A numeric value between 0 and 1 indicating the dropout probability to be applied between LSTM layers.
+# @param x A tensor of shape \code{(batch_size, sequence_length, input_size)} representing the input data.
+# @param h A list containing the hidden state (\code{hn}) and cell state (\code{cn}) from the LSTM, typically passed from the encoder or previous decoder step.
+
 #' @import torch
 
 
 
-EncoderRNN <- function(input_size, nhidden, nlayers, dropout) {
-  EncoderRNN_out <- torch::nn_module(
+EncoderRNN <- nn_module(
   "EncoderRNN",
 
   initialize = function(input_size, nhidden, nlayers, dropout) {
@@ -71,11 +78,15 @@ EncoderRNN <- function(input_size, nhidden, nlayers, dropout) {
       batch_first = TRUE
     )
 
+    # Initialize weights directly
+    #params <- self$lstm$parameters()
+    #for (p in params) {
+    #  p$data$uniform_(-0.1, 0.1)
+    #}
   },
 
   forward = function(x) {
     batch_size <- x$size(1)
-
     # Forward pass through LSTM
     out_state <- self$lstm(x)
     output <- out_state[[1]]
@@ -90,11 +101,12 @@ EncoderRNN <- function(input_size, nhidden, nlayers, dropout) {
     # Add a zero tensor
     zeros <- torch_zeros(c(batch_size, 1, x$size(3)))
     newinput <- torch_cat(list(zeros, newinput), 2)
+    #newinput <- newinput$narrow(2, 0, newinput$size(2) - 1)
+    #newinput <- torch::torch_reshape(newinput, c(batch_size, sequence_length, input_size))
+    #newinput <- torch::torch_reshape(newinput, c(batch_size, sequence_length, input_size))
 
     # Return the processed output and new input
     list(output, list(hn, cn), newinput)
   }
 
-  )
-  return(EncoderRNN_out)
-  }
+)

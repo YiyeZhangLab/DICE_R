@@ -6,6 +6,15 @@
 \usage{
 EncoderRNN(input_size, nhidden, nlayers, dropout)
 }
+\arguments{
+\item{input_size}{A numeric value representing the number of features in the input data.}
+
+\item{nhidden}{A numeric value representing the number of hidden units in each LSTM layer.}
+
+\item{nlayers}{A numeric value indicating the number of LSTM layers.}
+
+\item{dropout}{A numeric value between 0 and 1 indicating the dropout probability to be applied between LSTM layers.}
+}
 \description{
 An RNN-based encoder module using Long Short-Term Memory (LSTM) architecture, implemented with the \code{torch} package.
 This module is designed to process sequential data and is commonly used in tasks like sequence-to-sequence modeling, language modeling, and time series forecasting.

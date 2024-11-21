@@ -40,20 +40,32 @@ func_analysis_test_error_D0406 <- function(args, model, data_test, dataloader_te
   outcome_pred_prob <- c()
   cat("-----------------\n")
 
-  dataloader_test$reset()  # Reset the iterator
+  #dataloader_test$reset()  # Reset the iterator
+  # Create an iterator for the dataloader
+  #dataloader_iterator <- 1 #dataloader_make_iter(dataloader_test)
 
-  while (dataloader_test$has_next()) {
-    #### <-------------
-    #batch <- dataloader_test$next()
-    batch_idx <- batch[[1]]
-    batch_data <- batch[[2]]
-    index <- batch_data[[1]]
-    batch_xvy <- batch_data[[2]]
-    batch_c <- batch_data[[3]]
+  current_index <- 1
+  batch_iter <- dataloader_test$.iter()  # Create an iterator
 
-    data_x <- batch_xvy[[1]]
-    data_v <- batch_xvy[[2]]
-    target <- batch_xvy[[3]]
+  while (current_index <= dataloader_test$.length()) {
+    # To get the batch data, use an iterator
+    batch  <- batch_iter$.next()  # Get the first batch
+
+    # Check if the iterator is exhausted
+    if (is.null(batch) || as.character(batch) == ".__exhausted__.") break
+
+    batch_idx  <- batch_iter$.next()  # Get the first batch
+    data_x <- batch_idx
+
+    batch_idx <- batch$indices
+    batch_data <- batch
+    index <- batch$index
+    batch_xvy <- batch[[1]]
+    batch_c <- batch[[3]]
+
+    data_x <- batch[[1]]
+    data_v <- batch[[2]]
+    target <- batch[[3]]
 
     data_x <- torch_tensor(data_x, requires_grad = FALSE)
     data_v <- torch_tensor(data_v, requires_grad = FALSE)
@@ -67,12 +79,24 @@ func_analysis_test_error_D0406 <- function(args, model, data_test, dataloader_te
       batch_c <- batch_c$cuda()
     }
 
+    # Reshape data_x to [1, batch_size, feature_size] for RNN input
+    data_x <- data_x$unsqueeze(1)  # Add sequence dimension
+    # Print the new shape to verify
+    #print(data_x$size())  # Should print [1, 16, 4]
+
     # Forward pass
     output <- model$forward(x = data_x, function_name = "outcome_logistic_regression", demov = data_v)
     encoded_x <- output[[1]]
     decoded_x <- output[[2]]
     output_c_no_activate <- output[[3]]
     output_outcome <- output[[4]]
+
+    # Trim decoded_x to match data_x
+    decoded_x <- decoded_x[, 1:data_x$size(2), , drop = FALSE]
+
+    # Print shapes to confirm they match
+    #print(decoded_x$size())  # Should now match data_x$size()
+    #print(data_x$size())
 
     loss_AE <- criterion_MSE(data_x, decoded_x)
     loss_outcome <- criterion_BCE(output_outcome, target$float())
@@ -81,13 +105,13 @@ func_analysis_test_error_D0406 <- function(args, model, data_test, dataloader_te
 
     # Classification accuracy
     predicted <- torch_max(output_c_no_activate$data(), 1)$indices
-    correct <- correct + sum(as.numeric(predicted == batch_c))
-    total <- total + batch_c$size(0)
+    #correct <- correct + sum(as.numeric(predicted == batch_c))
+    total <- total + batch_c$size()
 
     outcome_true_y <- c(outcome_true_y, as.numeric(target$data()))
     outcome_pred_prob <- c(outcome_pred_prob, as.numeric(output_outcome$data()))
 
-    data_test$pred_C[index] <- predicted$cpu()
+    current_index <- current_index + 1
   }
 
   test_classifier_c_accuracy <- correct / total
@@ -97,5 +121,8 @@ func_analysis_test_error_D0406 <- function(args, model, data_test, dataloader_te
   # Calculate AUC score
   outcome_auc_score <- auc(outcome_true_y, outcome_pred_prob)
 
-  return(list(test_AE_loss = test_AE_loss, test_classifier_c_accuracy = test_classifier_c_accuracy, test_outcome_likelihood = test_outcome_likelihood, outcome_auc_score = outcome_auc_score))
+  return(list(test_AE_loss = test_AE_loss,
+              #test_classifier_c_accuracy = test_classifier_c_accuracy,
+              test_outcome_likelihood = test_outcome_likelihood,
+              outcome_auc_score = outcome_auc_score))
 }

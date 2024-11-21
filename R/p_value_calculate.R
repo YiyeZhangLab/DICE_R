@@ -43,14 +43,14 @@ p_value_calculate <- function(X, y, is_intercept, X_null = NULL) {
   full_model <- glm(y ~ X, family = binomial())
   alt_log_likelihood <- logLik(full_model)
 
-  if (is_intercept) {
+  if (is_intercept & !is.na(is_intercept)) {
     # Calculate the null model with only intercept
     null_prob <- mean(y)
     null_log_likelihood <- sum(dbinom(y, size = 1, prob = null_prob, log = TRUE))
     df <- 1
     G <- 2 * (alt_log_likelihood - null_log_likelihood)
     p_value <- pchisq(G, df, lower.tail = FALSE)
-  } else {
+  } else if (is.na(is_intercept)) {
     # Fit the null model
     null_model <- glm(y ~ X_null, family = binomial())
     null_log_likelihood <- logLik(null_model)

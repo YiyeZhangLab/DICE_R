@@ -26,28 +26,6 @@
 #'   \item Iteratively removes one or two clusters from the predictor matrix and calculates the p-value for the remaining clusters using the \code{\link{p_value_calculate}} function.
 #' }
 
-p_value_calculate <- function(X, y, is_intercept, X_null = NULL) {
-  full_model <- glm(y ~ X, family = binomial())
-  alt_log_likelihood <- logLik(full_model)
-
-  if (is_intercept) {
-    null_prob <- mean(y)
-    null_log_likelihood <- sum(dbinom(y, size = 1, prob = null_prob, log = TRUE))
-    df <- 1
-    G <- 2 * (alt_log_likelihood - null_log_likelihood)
-    p_value <- pchisq(G, df, lower.tail = FALSE)
-  } else {
-    null_model <- glm(y ~ X_null, family = binomial())
-    null_log_likelihood <- logLik(null_model)
-
-    df <- ncol(X) - ncol(X_null)
-    G <- 2 * (alt_log_likelihood - null_log_likelihood)
-    p_value <- pchisq(G, df, lower.tail = FALSE)
-  }
-  return(p_value)
-}
-
-# Define the analysis_p_value_related function
 analysis_p_value_related <- function(data_train, num_clusters, if_check = FALSE) {
   data_C <- data_train$C
   data_v <- data_train$data_v
@@ -113,6 +91,6 @@ analysis_p_value_related <- function(data_train, num_clusters, if_check = FALSE)
       dict_p_value[[paste(k1, k2 - 1, sep = ",")]] <- p_value_k1k2
     }
   }
-  cat("dict_p_value=", dict_p_value, "\n")
+  cat("dict_p_value=", unlist(dict_p_value), "\n")
   return(list(dict_outcome_ratio = dict_outcome_ratio, dict_p_value = dict_p_value))
 }

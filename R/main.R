@@ -39,18 +39,55 @@
 #' }
 #' @import torch ggplot2
 
+# Placeholder for the yf_dataset_withdemo class
+yf_dataset_withdemo <- function(path, file_name, n_z) {
+  data <- readRDS(paste0(path, file_name))
+  dataset <- list(
+    data_x = data[[1]],
+    data_v = data[[2]],
+    data_y = data[[3]],
+    n_samples = (length(data[[1]])/n_z),
+    n_cat = NULL,
+    M = NULL,
+    C = torch_tensor(rep(0, (length(data[[1]])/n_z)), dtype = torch_long()),
+    pred_C = torch_tensor(rep(0, (length(data[[1]])/n_z)), dtype = torch_long()),
+    rep = NULL
+  )
+  return(dataset)
+}
+
+# Define the main function
 main <- function(args) {
   set.seed(args$seed)
 
   # Load data
-  data_train <- yf_dataset_withdemo(args$input_path, args$filename_train, args$n_hidden_fea)
-  dataloader_train <- dataloader(tensor_dataset(list(data_train$data_x, data_train$data_v, data_train$data_y)), batch_size = 1, shuffle = TRUE, drop_last = TRUE)
+  data_train <- yf_dataset_withdemo(path = args$input_path, file_name = args$filename_train, n_z = args$n_hidden_fea)
+
+  # Convert data frames to tensors
+  data_x_tensor <- torch_tensor(as.matrix(data_train$data_x))
+  data_v_tensor <- torch_tensor(as.matrix(data_train$data_v))
+  data_y_tensor <- torch_tensor(data_train$data_y, dtype = torch_long())  # Adjust dtype as needed
+  # Create the tensor dataset
+  dataset <- tensor_dataset(data_x_tensor, data_v_tensor, data_y_tensor)
+  # Print to confirm
+  #print(dataset)
+
+  dataloader_train <- dataloader(dataset, batch_size = 1, shuffle = TRUE, drop_last = TRUE)
+
   data_test <- yf_dataset_withdemo(args$input_path, args$filename_test, args$n_hidden_fea)
-  dataloader_test <- dataloader(tensor_dataset(list(data_test$data_x, data_test$data_v, data_test$data_y)), batch_size = 1, shuffle = FALSE, drop_last = TRUE)
+  # Convert data frames to tensors
+  data_x_tensor <- torch_tensor(as.matrix(data_test$data_x))
+  data_v_tensor <- torch_tensor(as.matrix(data_test$data_v))
+  data_y_tensor <- torch_tensor(data_test$data_y, dtype = torch_long())  # Adjust dtype as needed
+  # Create the tensor dataset
+  dataset <- tensor_dataset(data_x_tensor, data_v_tensor, data_y_tensor)
+  # Print to confirm
+  #print(dataset)
+  dataloader_test <- dataloader(dataset, batch_size = 1, shuffle = FALSE, drop_last = TRUE)
 
   # Algorithm 2 model
   model <- model_2(args$n_input_fea, args$n_hidden_fea, args$lstm_layer, args$lstm_dropout, args$K_clusters, args$n_dummy_demov_fea, args$cuda)
-  optimizer <- optim_adam(model$parameters(), lr = args$lr)
+  optimizer <- optim_adam(model$parameters, lr = args$lr)
   criterion_MSE <- nn_mse_loss()
   criterion_BCE <- nn_bce_loss()
   criterion_CrossEntropy <- nn_cross_entropy_loss()
@@ -81,22 +118,29 @@ main <- function(args) {
   test_AE_loss_list <- c()
   number_reassign_list <- c()
   random_state_list <- c()
+  #rm(df_loss)
 
   for (epoch in seq_len(args$init_AE_epoch)) {
     error <- c()
     print("-----------------")
     model$train()
-    dataloader_train$reset()
-    while (dataloader_train$has_next()) {
-      #### <-------------
+    #dataloader_train$reset()
+
+    current_index <- 1
+    batch_iter <- dataloader_train$.iter()  # Create an iterator
+
+    while (current_index <= dataloader_train$.length()) {
+      # To get the batch data, use an iterator
+      batch  <- batch_iter$.next()  # Get the first batch
+      #while (dataloader_train$has_next()) {
       #batch <- dataloader_train$next()
       index <- batch[[1]]
       batch_xvy <- batch[[2]]
       batch_c <- batch[[3]]
 
-      data_x <- batch_xvy[[1]]
-      data_v <- batch_xvy[[2]]
-      target <- batch_xvy[[3]]
+      data_x <- batch[[1]]
+      data_v <- batch[[2]]
+      target <- batch[[3]]
 
       data_x <- torch_tensor(data_x, requires_grad = FALSE)
       data_v <- torch_tensor(data_v, requires_grad = FALSE)
@@ -108,15 +152,22 @@ main <- function(args) {
         target <- target$cuda()
       }
 
+      # Assuming batch size is 1 and sequence length is 1 for demonstration
+      data_x <- data_x$unsqueeze(1)  # Add a dimension to make the shape [1, 1, 4]
+
       output <- model$forward(x = data_x, function_name = "autoencoder")
       enc <- output[[1]]
       pred <- output[[2]]
+      # Reshape pred to match data_x
+      pred <- pred[, 1, ]$unsqueeze(1)
 
       optimizer$zero_grad()
       loss <- criterion_MSE(data_x, pred)
       loss$backward()
       optimizer$step()
       error <- c(error, as.numeric(loss$item()))
+
+      current_index <- current_index + 1
     }
     loss_list <- c(loss_list, mean(error))
 
@@ -169,17 +220,23 @@ main <- function(args) {
     # Part 2, clustering
     final_embed <- torch_randn(nrow(data_train$data_x), args$n_hidden_fea, dtype = torch_float())
     model$eval()
-    dataloader_train$reset()
-    while (dataloader_train$has_next()) {
-      #### <-------------
+    #dataloader_train$reset()
+
+    current_index <- 1
+    batch_iter <- dataloader_train$.iter()  # Create an iterator
+
+    while (current_index <= dataloader_train$.length()) {
+      # To get the batch data, use an iterator
+      batch  <- batch_iter$.next()  # Get the first batch
+      #while (dataloader_train$has_next()) {
       #batch <- dataloader_train$next()
       index <- batch[[1]]
       batch_xvy <- batch[[2]]
       batch_c <- batch[[3]]
 
-      data_x <- batch_xvy[[1]]
-      data_v <- batch_xvy[[2]]
-      target <- batch_xvy[[3]]
+      data_x <- batch[[1]]
+      data_v <- batch[[2]]
+      target <- batch[[3]]
 
       data_x <- torch_tensor(data_x, requires_grad = FALSE)
       data_v <- torch_tensor(data_v, requires_grad = FALSE)
@@ -191,15 +248,22 @@ main <- function(args) {
         target <- target$cuda()
       }
 
+      # Assuming batch size is 1 and sequence length is 1 for demonstration
+      data_x <- data_x$unsqueeze(1)  # Add a dimension to make the shape [1, 1, 4]
+
       output <- model$forward(x = data_x, function_name = "autoencoder")
       enc <- output[[1]]
       pred <- output[[2]]
 
-      embed <- enc$data$cpu()[,1,,drop=FALSE]
-      final_embed[index] <- embed
+      #embed <- enc$data$cpu()[,1,,drop=FALSE]
+      embed <- enc$cpu()[, 1, , drop = FALSE]
+
+      final_embed[current_index] <- embed
+
+      current_index <- current_index + 1
     }
 
-    final_embed <- final_embed$numpy()
+    final_embed <- as_array(final_embed)
     print(paste("    final_embed.shape=", dim(final_embed)))
 
     random_state <- sample(1:1234, 1)
@@ -215,6 +279,7 @@ main <- function(args) {
     new_labels <- result[[1]]
     order_c_map <- result[[2]]
     number_reassign <- sum(new_labels != data_train$C)
+    number_reassign <- as.numeric(number_reassign)  # Convert if it's a tensor
     print(paste("number_reassign=", number_reassign))
     number_reassign_list <- c(number_reassign_list, number_reassign)
     data_train$C <- new_labels
@@ -222,9 +287,9 @@ main <- function(args) {
     data_train$n_cat <- args$K_clusters
     data_train$M <- torch_zeros(args$n_hidden_fea, args$K_clusters)
     print("***************************************")
-    print(paste("data_train.M[0,:]=", data_train$M[1,]))
+    print(paste("data_train.M[0,:]=", as.numeric(data_train$M[1,])))
     update_M(data_train)
-    print(paste("data_train.M[0,:]=", data_train$M[1,]))
+    print(paste("data_train.M[0,:]=", as.numeric(data_train$M[1,])))
 
     print(paste("    data_train.M.shape=", dim(data_train$M)))
     print(paste("    data_train.C.shape=", dim(data_train$C)))
@@ -232,12 +297,30 @@ main <- function(args) {
     print("4. init train *.M, *.C, *.rep done!")
 
     # Update pseudo-label for test data
-    update_testset_R_C_M_K(args, model, data_test, dataloader_test, data_train)
+    data_test <- update_testset_R_C_M_K(args, model, data_test, dataloader_test, data_train)
 
     # Use the kmeans label
     test_final_embed <- data_test$rep
-    test_final_embed <- test_final_embed$numpy()
-    test_cluster_old_labels <- predict(kmeans, newdata = test_final_embed)
+    test_final_embed <- as_array(test_final_embed)
+
+    # Extract cluster centers from the trained kmeans model
+    centers <- kmeans$centers
+    # Calculate the nearest center for each row in test_final_embed
+    # Define the function to assign each point to the nearest cluster
+    assign_to_clusters <- function(new_data, centers) {
+      apply(new_data, 1, function(row) {
+        distances <- apply(centers, 1, function(center) sum((row - center)^2))  # Calculate squared Euclidean distances
+        which.min(distances)  # Get the index of the closest cluster center (1 or 2)
+      })
+    }
+
+    # Predict cluster membership for each point in test_final_embed_array
+    test_cluster_old_labels <- assign_to_clusters(test_final_embed, centers)
+    # Display the predicted cluster labels
+    #print(test_cluster_old_labels)
+
+    # R does not have a function to predict kmeans cluster membership. Python uses euclideann distance to make this prediction
+    #test_cluster_old_labels <- predict(kmeans, newdata = test_final_embed)
     test_list_c <- test_cluster_old_labels - 1
     test_new_list_c <- sapply(test_list_c, function(x) order_c_map[as.character(x)])
     data_test$C <- torch_tensor(test_new_list_c)
@@ -267,17 +350,20 @@ main <- function(args) {
       outcome_pred_prob <- c()
       print("-----------------")
       model$train()
-      dataloader_train$reset()
-      while (dataloader_train$has_next()) {
-        #### <-------------
-        #batch <- dataloader_train$next()
+
+      #dataloader_train$reset()
+      current_index <- 1
+      batch_iter <- dataloader_train$.iter()  # Create an iterator
+
+      while (current_index <= dataloader_train$.length()){
+        batch  <- batch_iter$.next()  # Get the first batch
         index <- batch[[1]]
         batch_xvy <- batch[[2]]
         batch_c <- batch[[3]]
 
-        data_x <- batch_xvy[[1]]
-        data_v <- batch_xvy[[2]]
-        target <- batch_xvy[[3]]
+        data_x <- batch[[1]]
+        data_v <- batch[[2]]
+        target <- batch[[3]]
 
         data_x <- torch_tensor(data_x, requires_grad = FALSE)
         data_v <- torch_tensor(data_v, requires_grad = FALSE)
@@ -290,6 +376,10 @@ main <- function(args) {
           target <- target$cuda()
           batch_c <- batch_c$cuda()
         }
+
+        # Assuming batch size is 1 and sequence length is 1 for demonstration
+        data_x <- data_x$unsqueeze(1)  # Add a dimension to make the shape [1, 1, 4]
+        data_v <- data_v$unsqueeze(1)  # Add a dimension to make the shape [1, 1, 4]
 
         # x, function, demov, mask_BoolTensor
         output <- model$forward(x = data_x, function_name = "outcome_logistic_regression", demov = data_v)
@@ -331,6 +421,14 @@ main <- function(args) {
         ###############################
 
         optimizer$zero_grad()
+
+        # Increment labels to start from 1
+        batch_c <- batch_c + 1
+        # Ensure batch_c is in LongType for criterion_CrossEntropy
+        batch_c <- batch_c$to(dtype = torch_long())
+        # Squeeze the extra dimension to get the shape [1, 2]
+        output_c_no_activate <- output_c_no_activate$squeeze(1)
+
         loss_classifier <- criterion_CrossEntropy(output_c_no_activate, batch_c)
         loss_AE <- criterion_MSE(data_x, decoded_x)
         loss_outcome <- criterion_BCE(output_outcome, target$float())
@@ -352,13 +450,22 @@ main <- function(args) {
         error_p_value <- c(error_p_value, as.numeric(loss_p_value$item()))
         error_outcome_likelihood <- c(error_outcome_likelihood, as.numeric(loss_outcome$item()))
 
-        predicted <- torch_max(output_c_no_activate$data(), 1)$indices
-        data_train$pred_C[index] <- predicted$cpu()
-        total <- total + batch_c$size(0)
+        # Get both values and indices by applying torch_max correctly
+        max_values_indices <- torch_max(output_c_no_activate, dim = 2, keepdim = TRUE)
+        # Extract the maximum values and the indices
+        max_values <- max_values_indices[[1]]
+        indices <- max_values_indices[[2]]
+
+        predicted <- indices
+
+        data_train$pred_C[current_index] <- torch_tensor(predicted, dtype = torch_long())
+        total <- total + batch_c$size(1)
         correct <- correct + sum(as.numeric(predicted == batch_c))
 
         outcome_true_y <- c(outcome_true_y, as.numeric(target$data()))
         outcome_pred_prob <- c(outcome_pred_prob, as.numeric(output_outcome$data()))
+
+        current_index <- current_index + 1
       }
 
       train_outcome_auc_score <- auc(outcome_true_y, outcome_pred_prob)
@@ -401,7 +508,7 @@ main <- function(args) {
       print(sprintf("        : test  AE loss= %.4e, c acc= %.4e, outcome nll= %.4e, outcome_auc_score= %.4e",
                     test_AE_loss, test_classifier_c_accuracy, test_outcome_likelihood, test_outcome_auc_score))
 
-      #dict_outcome_ratio
+      #dict_outcome_ratio,
       dict_p_value <- analysis_p_value_related(data_train, args$K_clusters, 1)
       dict_p_value_list <- unlist(dict_p_value)
       flag_morethan_0p05 <- any(dict_p_value_list > 0.05)

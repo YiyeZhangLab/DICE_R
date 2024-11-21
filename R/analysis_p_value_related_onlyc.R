@@ -84,6 +84,6 @@ analysis_p_value_related_onlyc <- function(data_train, num_clusters, if_check = 
       dict_p_value[[paste(k1, k2 - 1, sep = ",")]] <- p_value_k1k2
     }
   }
-  cat("dict_p_value only c=", dict_p_value, "\n")
+  cat("dict_p_value only c=", unlist(dict_p_value), "\n")
   cat("analysis done!\n")
 }

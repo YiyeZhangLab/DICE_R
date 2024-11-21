@@ -28,45 +28,32 @@
 #' }
 #' @import torch
 
+# Define the update_testset_R_C_M_K function
 update_testset_R_C_M_K <- function(args, model, data_test, dataloader_test, data_train) {
   cat("-----------------\n")
   cat("    update_testset_R_C_M_K\n")
 
   # Initialize final_embed tensor
-  final_embed <- torch_randn(nrow(data_test), args$n_hidden_fea, dtype = torch_float())
+  final_embed <- torch_randn(nrow(data_test$data_x), args$n_hidden_fea, dtype = torch_float())
 
   # Set the model to evaluation mode
   model$eval()
 
-  dataloader_test$reset()  # Reset the iterator
+  #dataloader_test$reset()  # Reset the iterator
+  # Initialize a counter to track the current index in final_embed
+  current_index <- 1
+  batch_iter <- dataloader_test$.iter()  # Create an iterator
 
-  while (dataloader_test$has_next()) {
-    #### <-------------
-    #batch <- dataloader_test$next()
-    #batch_idx <- batch[[1]]
-    #batch_data <- batch[[2]]
-    #index <- batch_data[[1]]
-    #batch_xvy <- batch_data[[2]]
-    #batch_c <- batch_data[[3]]
-
-    batch_iter <- dataloader_test$.iter()  # Create an iterator
+  while (current_index <= final_embed$size()[1]) {
+    # To get the batch data, use an iterator
     batch_idx  <- batch_iter$.next()  # Get the first batch
-    data_x <- batch_idx
 
+    # If batch_idx is NULL, break out of the loop
+    if (is.null(batch_idx)) break
 
-    #data_x <- batch_xvy[[1]]
-    #data_v <- batch_xvy[[2]]
-    #target <- batch_xvy[[3]]
-
-    #data_x <- torch_tensor(data_x, requires_grad = FALSE)
-    #data_v <- torch_tensor(data_v, requires_grad = FALSE)
-    #target <- torch_tensor(target, requires_grad = FALSE)
-
-    #if (args$cuda) {
-    #  data_x <- data_x$cuda()
-    #  data_v <- data_v$cuda()
-    #  target <- target$cuda()
-    #}
+    data_x <- batch_idx[[1]]
+    data_x <- torch_tensor(data_x, requires_grad = FALSE)
+    data_x <- data_x$unsqueeze(1)  # Add a dimension to make the shape [1, 1, 4]
 
     # Perform a forward pass through the model in autoencoder mode
     output <- model$forward(data_x, "autoencoder")
@@ -74,8 +61,13 @@ update_testset_R_C_M_K <- function(args, model, data_test, dataloader_test, data
     pred <- output[[2]]
 
     # Get the embeddings
-    embed <- enc$data$cpu()[,1,,drop=FALSE]
-    final_embed[index] <- embed
+    embed <- enc$cpu()[, 1, , drop = FALSE]
+
+    #embed <- enc$data$cpu()[,1,,drop=FALSE]
+    final_embed[current_index,] <- embed
+
+    # Increment the index counter for the next batch
+    current_index <- current_index + 1
   }
 
   # Update data_test attributes
@@ -90,16 +82,22 @@ update_testset_R_C_M_K <- function(args, model, data_test, dataloader_test, data
 
   # Update data_test.C
   representations <- data_test$rep
-  pred_C <- torch_zeros(nrow(data_test), dtype = torch_int())
 
-  for (i in seq_len(nrow(representations))) {
+  pred_C <- torch_zeros(data_test$rep$size()[1], dtype = torch_int())
+
+  for (i in seq_len(data_test$rep$size()[1])) {
     embed <- representations[i,]
     trans_embed <- embed$view(c(embed$size(), 1))
-    xj <- torch_norm(trans_embed - data_train$M, dim = 0)
+    # crasshes at xj <- torrch_norm
+    # Ensure the tensors are correctly aligned with 1-based indexing
+    trans_embed <- embed$view(c(embed$size(), 1))  # Reshape the embedding
+
+    xj <- torch_norm(trans_embed - data_train$data_x[i,], dim = 1)
     new_cluster <- torch_argmin(xj)
     pred_C[i] <- new_cluster
   }
 
   data_test$pred_C <- pred_C
   cat("        update pred data_test C\n")
+  return(data_test)
 }

@@ -65,95 +65,97 @@
 #' }
 #' @import torch
 
-model_2 <- function(input_size, nhidden, nlayers, dropout, n_clusters, n_dummy_demov_fea, para_cuda) {
-  model_2_out <- torch::nn_module(
-    "model_2",
+model_2 <- nn_module(
+  "model_2",
 
-    initialize = function(input_size, nhidden, nlayers, dropout, n_clusters, n_dummy_demov_fea, para_cuda) {
-      self$nhidden <- nhidden
-      self$input_size <- input_size
-      self$nlayers <- nlayers
-      self$dropout <- dropout
-      self$n_clusters <- n_clusters
-      self$n_dummy_demov_fea <- n_dummy_demov_fea
-      self$para_cuda <- para_cuda
+  initialize = function(input_size, nhidden, nlayers, dropout, n_clusters, n_dummy_demov_fea, para_cuda) {
+    self$nhidden <- nhidden
+    self$input_size <- input_size
+    self$nlayers <- nlayers
+    self$dropout <- dropout
+    self$n_clusters <- n_clusters
+    self$n_dummy_demov_fea <- n_dummy_demov_fea
+    self$para_cuda <- para_cuda
 
-      self$encoder <- EncoderRNN(self$input_size, self$nhidden, self$nlayers, self$dropout)
-      self$decoder <- DecoderRNN(self$input_size, self$nhidden, self$nlayers, self$dropout)
+    self$encoder <- EncoderRNN(self$input_size, self$nhidden, self$nlayers, self$dropout)
+    self$decoder <- DecoderRNN(self$input_size, self$nhidden, self$nlayers, self$dropout)
 
-      self$linear_decoder_output <- nn_linear(self$nhidden, self$input_size)
-      self$linear_classifier_c <- nn_linear(self$nhidden, self$n_clusters)
-      self$activateion_classifier <- nn_softmax(dim = 1)
-      self$linear_regression_c <- nn_linear(self$n_clusters, 1)
-      self$linear_regression_demov <- nn_linear(self$n_dummy_demov_fea, 1)
-      self$activation_regression <- nn_sigmoid()
+    self$linear_decoder_output <- nn_linear(self$nhidden, self$input_size)
+    self$linear_classifier_c <- nn_linear(self$nhidden, self$n_clusters)
+    self$activateion_classifier <- nn_softmax(dim = 1)
+    self$linear_regression_c <- nn_linear(self$n_clusters, 1)
+    self$linear_regression_demov <- nn_linear(self$n_dummy_demov_fea, 1)
+    self$activation_regression <- nn_sigmoid()
 
-      #self$init_weights()
-    },
+    #self$init_weights()
+  },
 
-    init_weights = function() {
-      self$linear_decoder_output$bias$data$fill_(0)
-      self$linear_decoder_output$weight$data$uniform_(-0.1, 0.1)
+  init_weights = function() {
+    self$linear_decoder_output$bias$data$fill_(0)
+    self$linear_decoder_output$weight$data$uniform_(-0.1, 0.1)
 
-      self$linear_classifier_c$bias$data$fill_(0)
-      self$linear_classifier_c$weight$data$uniform_(-0.1, 0.1)
+    self$linear_classifier_c$bias$data$fill_(0)
+    self$linear_classifier_c$weight$data$uniform_(-0.1, 0.1)
 
-      self$linear_regression_c$bias$data$fill_(0)
-      self$linear_regression_c$weight$data$uniform_(-0.1, 0.1)
+    self$linear_regression_c$bias$data$fill_(0)
+    self$linear_regression_c$weight$data$uniform_(-0.1, 0.1)
 
-      self$linear_regression_demov$bias$data$fill_(0)
-      self$linear_regression_demov$weight$data$uniform_(-0.1, 0.1)
-    },
+    self$linear_regression_demov$bias$data$fill_(0)
+    self$linear_regression_demov$weight$data$uniform_(-0.1, 0.1)
+  },
 
-    forward = function(x, function_name, demov = NULL, mask_BoolTensor = NULL) {
-      if (function_name == "autoencoder") {
-        result <- self$encoder(x)
-        encoded_x <- result[[1]]
-        state <- result[[2]]
-        newinput <- result[[3]]
-        decoded_x <- self$decoder(newinput, state)
-        decoded_x <- self$linear_decoder_output(decoded_x)
-        return(list(encoded_x, decoded_x))
-      } else if (function_name == "get_representation") {
-        result <- self$encoder(x)
-        encoded_x <- result[[1]]
-        return(encoded_x)
-      } else if (function_name == "classifier") {
-        result <- self$encoder(x)
-        encoded_x <- result[[1]]
-        output <- self$linear_classifier_c(encoded_x)
-        output <- self$activateion_classifier(output)
-        return(list(encoded_x, output))
-      } else if (function_name == "outcome_logistic_regression") {
-        result <- self$encoder(x)
-        encoded_x <- result[[1]]
-        state <- result[[2]]
-        newinput <- result[[3]]
-        decoded_x <- self$decoder(newinput, state)
-        decoded_x <- self$linear_decoder_output(decoded_x)
+  forward = function(x, function_name, demov = NULL, mask_BoolTensor = NULL) {
+    if (function_name == "autoencoder") {
+      result <- self$encoder(x)
+      encoded_x <- result[[1]]
+      state <- result[[2]]
+      newinput <- result[[3]]
+      decoded_x <- self$decoder(newinput, state)
+      decoded_x <- self$linear_decoder_output(decoded_x)
+      return(list(encoded_x, decoded_x))
+    } else if (function_name == "get_representation") {
+      result <- self$encoder(x)
+      encoded_x <- result[[1]]
+      return(encoded_x)
+    } else if (function_name == "classifier") {
+      result <- self$encoder(x)
+      encoded_x <- result[[1]]
+      output <- self$linear_classifier_c(encoded_x)
+      output <- self$activateion_classifier(output)
+      return(list(encoded_x, output))
+    } else if (function_name == "outcome_logistic_regression") {
+      result <- self$encoder(x)
+      encoded_x <- result[[1]]
+      state <- result[[2]]
+      newinput <- result[[3]]
+      decoded_x <- self$decoder(newinput, state)
+      decoded_x <- self$linear_decoder_output(decoded_x)
 
-        encoded_x <- encoded_x[,1,,drop=FALSE]
-        output_c_no_activate <- self$linear_classifier_c(encoded_x)
-        output_c <- self$activateion_classifier(output_c_no_activate)
+      encoded_x <- encoded_x[,1,,drop=FALSE]
+      output_c_no_activate <- self$linear_classifier_c(encoded_x)
+      output_c <- self$activateion_classifier(output_c_no_activate)
 
-        if (!is.null(mask_BoolTensor)) {
-          if (self$para_cuda) {
-            mask_BoolTensor <- mask_BoolTensor$cuda()
-          }
-          output_c <- output_c$masked_fill(mask = mask_BoolTensor, value = torch_tensor(0.0))
+      if (!is.null(mask_BoolTensor)) {
+        if (self$para_cuda) {
+          mask_BoolTensor <- mask_BoolTensor$cuda()
         }
-
-        output_from_c <- self$linear_regression_c(output_c)
-        output_from_v <- self$linear_regression_demov(demov)
-        output_cpv <- output_from_c + output_from_v
-        output_outcome <- self$activation_regression(output_cpv)
-
-        return(list(encoded_x, decoded_x, output_c_no_activate, output_outcome))
-      } else {
-        print("No corresponding function, check the function you want for model_2")
-        return("Wrong!")
+        else {
+          output_c <- output_c$masked_fill(mask = mask_BoolTensor, value = (0.0))
+        }
       }
+
+      output_from_c <- self$linear_regression_c(output_c)
+      #demov <- demov$view(c(-1, 4))
+      #demov <- demov$squeeze(dim = 1)
+
+      output_from_v <- self$linear_regression_demov(demov)
+      output_cpv <- output_from_c + output_from_v
+      output_outcome <- self$activation_regression(output_cpv)
+
+      return(list(encoded_x, decoded_x, output_c_no_activate, output_outcome))
+    } else {
+      print("No corresponding function, check the function you want for model_2")
+      return("Wrong!")
     }
-  )
-  return(model_2_out)
-}
+  }
+)
