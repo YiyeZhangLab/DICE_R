@@ -74,7 +74,7 @@ main <- function(args) {
 
   dataloader_train <- dataloader(dataset, batch_size = 1, shuffle = TRUE, drop_last = TRUE)
 
-  data_test <- yf_dataset_withdemo(args$input_path, args$filename_test, args$n_hidden_fea)
+  data_test <- yf_dataset_withdemo(path = args$input_path, file_name = args$filename_test, n_z = args$n_hidden_fea)
   # Convert data frames to tensors
   data_x_tensor <- torch_tensor(as.matrix(data_test$data_x))
   data_v_tensor <- torch_tensor(as.matrix(data_test$data_v))
@@ -319,11 +319,12 @@ main <- function(args) {
     # Display the predicted cluster labels
     #print(test_cluster_old_labels)
 
-    # R does not have a function to predict kmeans cluster membership. Python uses euclideann distance to make this prediction
+    # R does not have a function to predict kmeans cluster membership. Python uses euclidean distance to make this prediction
     #test_cluster_old_labels <- predict(kmeans, newdata = test_final_embed)
     test_list_c <- test_cluster_old_labels - 1
     test_new_list_c <- sapply(test_list_c, function(x) order_c_map[as.character(x)])
-    data_test$C <- torch_tensor(test_new_list_c)
+    #data_test$C <- torch_tensor(test_new_list_c)
+    data_test$pred_C <- torch_tensor(test_new_list_c)
 
     # Classification and regression
     list_train_AE_loss <- c()
@@ -458,7 +459,7 @@ main <- function(args) {
 
         predicted <- indices
 
-        data_train$pred_C[current_index] <- torch_tensor(predicted, dtype = torch_long())
+        data_train$pred_C[current_index] <- as.numeric(as_array(torch_tensor(predicted, dtype = torch_long())))
         total <- total + batch_c$size(1)
         correct <- correct + sum(as.numeric(predicted == batch_c))
 
@@ -466,6 +467,7 @@ main <- function(args) {
         outcome_pred_prob <- c(outcome_pred_prob, as.numeric(output_outcome$data()))
 
         current_index <- current_index + 1
+
       }
 
       train_outcome_auc_score <- auc(outcome_true_y, outcome_pred_prob)
@@ -488,7 +490,7 @@ main <- function(args) {
 
       list_outcome_likelihood <- c(list_outcome_likelihood, train_outcome_likeilhood)
 
-      test_results <- func_analysis_test_error_D0406(args, model, data_test, dataloader_test)
+      test_results <- suppressWarnings(func_analysis_test_error_D0406(args, model, data_test, dataloader_test))
       test_AE_loss <- test_results$test_AE_loss
       test_classifier_c_accuracy <- test_results$test_classifier_c_accuracy
       test_outcome_likelihood <- test_results$test_outcome_likelihood
@@ -513,19 +515,33 @@ main <- function(args) {
       dict_p_value_list <- unlist(dict_p_value)
       flag_morethan_0p05 <- any(dict_p_value_list > 0.05)
 
-      if (test_outcome_likelihood < min_test_negloglikeli_record && !flag_morethan_0p05) {
+      if (test_outcome_likelihood < min_test_negloglikeli_record) {
         print(paste("save model here! iter_i=", iter_i, ", epoch=", epoch))
         min_test_negloglikeli_record <- test_outcome_likelihood
         torch_save(model$state_dict(), file.path(part2_foldername, 'model_iter.pt'))
         print("    Saving model")
 
+        data_train$M <- as.array(data_train$M)
+        data_train$C <- as.numeric(as.array(data_train$C))
+        data_train$pred_C <- as.numeric(as.array(data_train$pred_C))
+        data_train$pred_C <- data_train$pred_C - 1
         saveRDS(data_train, file = file.path(part2_foldername, 'data_train_iter.rds'))
         print("    save data_train")
+        data_test$M <- as.array(data_test$M)
+        #data_test$C <- as.array(data_test$C)
+        #data_test$pred_C <- as.array(data_test$pred_C)
+        data_test$C <- as.numeric(as.array(data_test$C))
+        data_test$pred_C <- as.numeric(as.array(data_test$pred_C))
+        #data_test$pred_C <- data_test$pred_C - 3
+        saveRDS(data_test, file = file.path(part2_foldername, 'data_test_iter.rds'))
+        print("    save data_test")
 
         saved_iter_list <- c(saved_iter_list, iter_i)
         saved_iter <- iter_i
       }
     }
+
+
   }
 
   print(paste("number_reassign_list=", number_reassign_list))
