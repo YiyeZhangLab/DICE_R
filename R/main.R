@@ -515,7 +515,15 @@ main <- function(args) {
       dict_p_value_list <- unlist(dict_p_value)
       flag_morethan_0p05 <- any(dict_p_value_list > 0.05)
 
-      if (test_outcome_likelihood < min_test_negloglikeli_record) {
+      print(paste("test_outcome_likelihood=",test_outcome_likelihood))
+      print(paste("min_test_negloglikeli_record=",min_test_negloglikeli_record))
+      print(test_outcome_likelihood <= min_test_negloglikeli_record)
+      print(length(dict_p_value))
+      print(dict_p_value)
+      print(as.numeric(as.character(dict_p_value[length(dict_p_value)])))
+
+      if ((test_outcome_likelihood <= min_test_negloglikeli_record) &
+          as.numeric(as.character(dict_p_value[length(dict_p_value)])) <= 0.05) {
         print(paste("save model here! iter_i=", iter_i, ", epoch=", epoch))
         min_test_negloglikeli_record <- test_outcome_likelihood
         torch_save(model$state_dict(), file.path(part2_foldername, 'model_iter.pt'))
