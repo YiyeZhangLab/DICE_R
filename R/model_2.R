@@ -64,6 +64,8 @@
 #'   }
 #' }
 #' @import torch
+#' @export
+
 
 model_2 <- nn_module(
   "model_2",

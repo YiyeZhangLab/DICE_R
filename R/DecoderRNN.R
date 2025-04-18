@@ -54,6 +54,8 @@
 #' @return A tensor representing the output sequence, flipped along the sequence dimension.
 #'
 #' @import torch
+#' @export
+
 
 DecoderRNN <- nn_module(
   "DecoderRNN",

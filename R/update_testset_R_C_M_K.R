@@ -27,6 +27,8 @@
 #'   \item For each test sample, computes the closest cluster center (based on Euclidean distance) and assigns the corresponding cluster to \code{pred_C}.
 #' }
 #' @import torch
+#' @export
+
 
 # Define the update_testset_R_C_M_K function
 update_testset_R_C_M_K <- function(args, model, data_test, dataloader_test, data_train) {

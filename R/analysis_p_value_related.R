@@ -25,6 +25,8 @@
 #'   \item Combines the cluster one-hot encodings with additional covariates to create a matrix of predictor variables.
 #'   \item Iteratively removes one or two clusters from the predictor matrix and calculates the p-value for the remaining clusters using the \code{\link{p_value_calculate}} function.
 #' }
+#' @export
+
 
 analysis_p_value_related <- function(data_train, num_clusters, if_check = FALSE) {
   data_C <- data_train$C

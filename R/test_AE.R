@@ -25,6 +25,8 @@
 #'   \item Computes the mean of the accumulated losses to return the overall test error.
 #' }
 #' @import torch
+#' @export
+
 
 test_AE <- function(args, model, dataloader_test) {
   # Define the MSE loss criterion

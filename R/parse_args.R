@@ -31,6 +31,8 @@
 #'   \item \code{--lambda_p_value}: Numeric. Regularization weight for the p-value adjustment in each iteration. Default is 1.0.
 #' }
 #' @import argparser
+#' @export
+
 
 parse_args <- function() {
   # Defines the function parse_args() which doesn't accept any parameters and is intended to be called directly from the command line or within a script to parse arguments.

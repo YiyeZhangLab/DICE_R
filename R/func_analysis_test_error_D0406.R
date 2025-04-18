@@ -27,6 +27,8 @@
 #'   \item Returns the average values of the computed metrics across all test batches.
 #' }
 #' @import torch
+#' @export
+
 
 func_analysis_test_error_D0406 <- function(args, model, data_test, dataloader_test) {
   model$eval()

@@ -38,6 +38,7 @@
 #'   \item Outputs and saves relevant training metrics, including loss curves and model checkpoints.
 #' }
 #' @import torch ggplot2
+#' @export
 
 # Placeholder for the yf_dataset_withdemo class
 yf_dataset_withdemo <- function(path, file_name, n_z) {
@@ -49,8 +50,8 @@ yf_dataset_withdemo <- function(path, file_name, n_z) {
     n_samples = (length(data[[1]])/n_z),
     n_cat = NULL,
     M = NULL,
-    C = torch_tensor(rep(0, (length(data[[1]])/n_z)), dtype = torch_long()),
-    pred_C = torch_tensor(rep(0, (length(data[[1]])/n_z)), dtype = torch_long()),
+    C = torch::torch_tensor(rep(0, (length(data[[1]])/n_z)), dtype = torch_long()),
+    pred_C = torch::torch_tensor(rep(0, (length(data[[1]])/n_z)), dtype = torch_long()),
     rep = NULL
   )
   return(dataset)
@@ -64,9 +65,9 @@ main <- function(args) {
   data_train <- yf_dataset_withdemo(path = args$input_path, file_name = args$filename_train, n_z = args$n_hidden_fea)
 
   # Convert data frames to tensors
-  data_x_tensor <- torch_tensor(as.matrix(data_train$data_x))
-  data_v_tensor <- torch_tensor(as.matrix(data_train$data_v))
-  data_y_tensor <- torch_tensor(data_train$data_y, dtype = torch_long())  # Adjust dtype as needed
+  data_x_tensor <- torch::torch_tensor(as.matrix(data_train$data_x))
+  data_v_tensor <- torch::torch_tensor(as.matrix(data_train$data_v))
+  data_y_tensor <- torch::torch_tensor(data_train$data_y, dtype = torch_long())  # Adjust dtype as needed
   # Create the tensor dataset
   dataset <- tensor_dataset(data_x_tensor, data_v_tensor, data_y_tensor)
   # Print to confirm
@@ -76,9 +77,9 @@ main <- function(args) {
 
   data_test <- yf_dataset_withdemo(path = args$input_path, file_name = args$filename_test, n_z = args$n_hidden_fea)
   # Convert data frames to tensors
-  data_x_tensor <- torch_tensor(as.matrix(data_test$data_x))
-  data_v_tensor <- torch_tensor(as.matrix(data_test$data_v))
-  data_y_tensor <- torch_tensor(data_test$data_y, dtype = torch_long())  # Adjust dtype as needed
+  data_x_tensor <- torch::torch_tensor(as.matrix(data_test$data_x))
+  data_v_tensor <- torch::torch_tensor(as.matrix(data_test$data_v))
+  data_y_tensor <- torch::torch_tensor(data_test$data_y, dtype = torch_long())  # Adjust dtype as needed
   # Create the tensor dataset
   dataset <- tensor_dataset(data_x_tensor, data_v_tensor, data_y_tensor)
   # Print to confirm
@@ -142,9 +143,9 @@ main <- function(args) {
       data_v <- batch[[2]]
       target <- batch[[3]]
 
-      data_x <- torch_tensor(data_x, requires_grad = FALSE)
-      data_v <- torch_tensor(data_v, requires_grad = FALSE)
-      target <- torch_tensor(target, requires_grad = FALSE)
+      data_x <- torch::torch_tensor(data_x, requires_grad = FALSE)
+      data_v <- torch::torch_tensor(data_v, requires_grad = FALSE)
+      target <- torch::torch_tensor(target, requires_grad = FALSE)
 
       if (args$cuda) {
         data_x <- data_x$cuda()
@@ -238,9 +239,9 @@ main <- function(args) {
       data_v <- batch[[2]]
       target <- batch[[3]]
 
-      data_x <- torch_tensor(data_x, requires_grad = FALSE)
-      data_v <- torch_tensor(data_v, requires_grad = FALSE)
-      target <- torch_tensor(target, requires_grad = FALSE)
+      data_x <- torch::torch_tensor(data_x, requires_grad = FALSE)
+      data_v <- torch::torch_tensor(data_v, requires_grad = FALSE)
+      target <- torch::torch_tensor(target, requires_grad = FALSE)
 
       if (args$cuda) {
         data_x <- data_x$cuda()
@@ -270,7 +271,7 @@ main <- function(args) {
     print(paste("random_state=", random_state))
     random_state_list <- c(random_state_list, random_state)
     kmeans <- kmeans(final_embed, centers = args$K_clusters, nstart = 25, iter.max = 1000)
-    final_embed <- torch_tensor(final_embed)
+    final_embed <- torch::torch_tensor(final_embed)
     data_train$rep <- final_embed
 
     # Always put the high-risk outcome in the beginning
@@ -323,8 +324,8 @@ main <- function(args) {
     #test_cluster_old_labels <- predict(kmeans, newdata = test_final_embed)
     test_list_c <- test_cluster_old_labels - 1
     test_new_list_c <- sapply(test_list_c, function(x) order_c_map[as.character(x)])
-    #data_test$C <- torch_tensor(test_new_list_c)
-    data_test$pred_C <- torch_tensor(test_new_list_c)
+    #data_test$C <- torch::torch_tensor(test_new_list_c)
+    data_test$pred_C <- torch::torch_tensor(test_new_list_c)
 
     # Classification and regression
     list_train_AE_loss <- c()
@@ -366,10 +367,10 @@ main <- function(args) {
         data_v <- batch[[2]]
         target <- batch[[3]]
 
-        data_x <- torch_tensor(data_x, requires_grad = FALSE)
-        data_v <- torch_tensor(data_v, requires_grad = FALSE)
-        target <- torch_tensor(target, requires_grad = FALSE)
-        batch_c <- torch_tensor(batch_c, requires_grad = FALSE)
+        data_x <- torch::torch_tensor(data_x, requires_grad = FALSE)
+        data_v <- torch::torch_tensor(data_v, requires_grad = FALSE)
+        target <- torch::torch_tensor(target, requires_grad = FALSE)
+        batch_c <- torch::torch_tensor(batch_c, requires_grad = FALSE)
 
         if (args$cuda) {
           data_x <- data_x$cuda()
@@ -404,8 +405,8 @@ main <- function(args) {
         list_mask_k1k2 <- rep(0, args$K_clusters)
         list_mask_k1k2[c(k1, k2)] <- 1
 
-        mask_k1_tensor <- torch_tensor(list_mask_k1, dtype = torch_bool())
-        mask_k1k2_tensor <- torch_tensor(list_mask_k1k2, dtype = torch_bool())
+        mask_k1_tensor <- torch::torch_tensor(list_mask_k1, dtype = torch_bool())
+        mask_k1k2_tensor <- torch::torch_tensor(list_mask_k1k2, dtype = torch_bool())
 
         output_mask_k1 <- model$forward(x = data_x, function_name = "outcome_logistic_regression", demov = data_v, mask_BoolTensor = mask_k1_tensor)
         output_mask_k1k2 <- model$forward(x = data_x, function_name = "outcome_logistic_regression", demov = data_v, mask_BoolTensor = mask_k1k2_tensor)
@@ -459,7 +460,7 @@ main <- function(args) {
 
         predicted <- indices
 
-        data_train$pred_C[current_index] <- as.numeric(as_array(torch_tensor(predicted, dtype = torch_long())))
+        data_train$pred_C[current_index] <- as.numeric(as_array(torch::torch_tensor(predicted, dtype = torch_long())))
         total <- total + batch_c$size(1)
         correct <- correct + sum(as.numeric(predicted == batch_c))
 

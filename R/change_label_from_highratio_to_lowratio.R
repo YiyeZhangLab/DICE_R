@@ -29,6 +29,8 @@
 #'   \item Returns the new cluster labels and the mapping from old labels to new labels.
 #' }
 #' @import torch
+#' @export
+
 
 change_label_from_highratio_to_lowratio <- function(args, oldlabel, data_train) {
   data_v <- data_train$data_v

@@ -35,6 +35,8 @@
 #' p_value <- p_value_calculate(X, y, is_intercept = FALSE, X_null = X_null)
 #' print(p_value)
 #' }
+#' @export
+
 
 p_value_calculate <- function(X, y, is_intercept, X_null = NULL) {
   cat("X.shape=", dim(X), ", y.shape=", length(y), "\n")

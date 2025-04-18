@@ -57,6 +57,8 @@
 # @param h A list containing the hidden state (\code{hn}) and cell state (\code{cn}) from the LSTM, typically passed from the encoder or previous decoder step.
 
 #' @import torch
+#' @export
+
 
 
 

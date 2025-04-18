@@ -22,6 +22,8 @@
 #'   \item The computed mean embedding is then used to update the corresponding column in the \code{M} matrix.
 #' }
 #' @import torch
+#' @export
+
 update_M <- function(data_train) {
   # Check if the number of columns in M matches n_cat
   if (ncol(data_train$M) != data_train$n_cat) {
