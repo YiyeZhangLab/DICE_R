@@ -35,7 +35,7 @@ The \code{p_value_calculate} function performs the following steps:
 }
 }
 \examples{
-\dontrun{
+
 # Example with only an intercept in the null model
 X <- matrix(rnorm(100 * 5), ncol = 5)
 y <- rbinom(100, 1, 0.5)
@@ -46,5 +46,4 @@ print(p_value)
 X_null <- X[, 1:2]  # Using only the first two predictors in the null model
 p_value <- p_value_calculate(X, y, is_intercept = FALSE, X_null = X_null)
 print(p_value)
-}
 }

@@ -56,5 +56,5 @@ update_M <- function(data_train) {
 
     data_train$M[, c_key] <- mean_values
   }
-  cat("    update M!\n")
+  message("    update M!")
 }

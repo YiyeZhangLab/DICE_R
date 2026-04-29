@@ -33,7 +33,7 @@ test_AE <- function(args, model, dataloader_test) {
   criterion_MSE <- nn_mse_loss()
 
   test_error <- c()
-  cat("-----------------\n")
+  message("-----------------")
 
   # Set the model to evaluation mode
   model$eval()

@@ -73,9 +73,8 @@ parse_args <- function() {
   # - parser.parse_args(): Parses the command-line arguments provided to the script. If any required arguments are missing or invalid, the script will automatically display an error and help information.
   # - print(vars(args)): Converts the args Namespace object to a dictionary and prints it. This shows all the arguments that have been set, either by defaults or by user input.
   # - return args: Returns the populated args Namespace. This object contains all the command-line arguments that were parsed. This is useful for the rest of the program to access and use these settings.
-  args <- parse_args(parse)
-  foo <- parse_args()
-  print("parameters:")
-  print(args)
+  args <- argparser::parse_args(parser)
+  message("parameters:")
+  message(paste(utils::capture.output(args), collapse = "\n"))
   return(args)
 }

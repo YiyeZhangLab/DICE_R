@@ -57,7 +57,7 @@
 #' @export
 
 
-DecoderRNN <- nn_module(
+DecoderRNN <- torch::nn_module(
   "DecoderRNN",
 
   initialize = function(input_size, nhidden, nlayers, dropout) {

@@ -48,12 +48,12 @@ change_label_from_highratio_to_lowratio <- function(args, oldlabel, data_train) 
   }
 
   dict_outcome_ratio <- dict_outcome_in_c_count / dict_c_count
-  cat("Before change dict_outcome_ratio =", dict_outcome_ratio, "\n")
+  message("Before change dict_outcome_ratio =", dict_outcome_ratio, "")
 
   sorted_indices <- order(dict_outcome_ratio, decreasing = TRUE)
   order_c_map <- setNames(seq_along(sorted_indices) - 1, sorted_indices - 1)
-  cat("sorted_dict_outcome_ratio =", dict_outcome_ratio[sorted_indices], "\n")
-  cat("order_c_map =", order_c_map, "\n")
+  message("sorted_dict_outcome_ratio =", dict_outcome_ratio[sorted_indices], "")
+  message("order_c_map =", order_c_map, "")
 
   new_list_c <- sapply(list_c, function(x) order_c_map[as.character(x)])
 

@@ -23,7 +23,6 @@
 #' }
 #'
 #' @examples
-#' \dontrun{
 #' # Example with only an intercept in the null model
 #' X <- matrix(rnorm(100 * 5), ncol = 5)
 #' y <- rbinom(100, 1, 0.5)
@@ -34,32 +33,33 @@
 #' X_null <- X[, 1:2]  # Using only the first two predictors in the null model
 #' p_value <- p_value_calculate(X, y, is_intercept = FALSE, X_null = X_null)
 #' print(p_value)
-#' }
+#'
+#' @import stats
 #' @export
 
 
 p_value_calculate <- function(X, y, is_intercept, X_null = NULL) {
-  cat("X.shape=", dim(X), ", y.shape=", length(y), "\n")
+  message("X.shape=", dim(X), ", y.shape=", length(y), "")
 
   # Fit the full model
-  full_model <- glm(y ~ X, family = binomial())
-  alt_log_likelihood <- logLik(full_model)
+  full_model <- stats::glm(y ~ X, family = binomial())
+  alt_log_likelihood <- stats::logLik(full_model)
 
   if (is_intercept & !is.na(is_intercept)) {
     # Calculate the null model with only intercept
     null_prob <- mean(y)
-    null_log_likelihood <- sum(dbinom(y, size = 1, prob = null_prob, log = TRUE))
+    null_log_likelihood <- sum(stats::dbinom(y, size = 1, prob = null_prob, log = TRUE))
     df <- 1
     G <- 2 * (alt_log_likelihood - null_log_likelihood)
-    p_value <- pchisq(G, df, lower.tail = FALSE)
+    p_value <- stats::pchisq(G, df, lower.tail = FALSE)
   } else if (is.na(is_intercept)) {
     # Fit the null model
-    null_model <- glm(y ~ X_null, family = binomial())
-    null_log_likelihood <- logLik(null_model)
+    null_model <- stats::glm(y ~ X_null, family = binomial())
+    null_log_likelihood <- stats::logLik(null_model)
 
     df <- ncol(X) - ncol(X_null)
     G <- 2 * (alt_log_likelihood - null_log_likelihood)
-    p_value <- pchisq(G, df, lower.tail = FALSE)
+    p_value <- stats::pchisq(G, df, lower.tail = FALSE)
   }
   return(p_value)
 }

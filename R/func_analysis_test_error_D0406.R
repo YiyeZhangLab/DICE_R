@@ -40,7 +40,7 @@ func_analysis_test_error_D0406 <- function(args, model, data_test, dataloader_te
   total <- 0
   outcome_true_y <- c()
   outcome_pred_prob <- c()
-  cat("-----------------\n")
+  message("-----------------")
 
   #dataloader_test$reset()  # Reset the iterator
   # Create an iterator for the dataloader
@@ -121,7 +121,7 @@ func_analysis_test_error_D0406 <- function(args, model, data_test, dataloader_te
   test_outcome_likelihood <- mean(error_outcome_likelihood)
 
   # Calculate AUC score
-  outcome_auc_score <- auc(outcome_true_y, outcome_pred_prob)
+  outcome_auc_score <- pROC::auc(outcome_true_y, outcome_pred_prob)
 
   return(list(test_AE_loss = test_AE_loss,
               #test_classifier_c_accuracy = test_classifier_c_accuracy,

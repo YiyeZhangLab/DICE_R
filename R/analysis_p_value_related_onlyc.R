@@ -46,27 +46,27 @@ analysis_p_value_related_onlyc <- function(data_train, num_clusters, if_check = 
   }
 
   if (if_check) {
-    cat("--------\n")
-    cat("num_clusters=", num_clusters, "\n")
-    cat("\n")
-    cat("list_c[0]=", list_c[1], "\n")
-    cat("list_onehot[0,]=", list_onehot[1,], "\n")
-    cat("\n")
-    cat("list_c[1]=", list_c[2], "\n")
-    cat("list_onehot[1,]=", list_onehot[2,], "\n")
-    cat("--------\n")
+    message("--------")
+    message("num_clusters=", num_clusters, "")
+    message("")
+    message("list_c[0]=", list_c[1], "")
+    message("list_onehot[0,]=", list_onehot[1,], "")
+    message("")
+    message("list_c[1]=", list_c[2], "")
+    message("list_onehot[1,]=", list_onehot[2,], "")
+    message("--------")
   }
-  cat("dict_c_count=", dict_c_count, "\n")
-  cat("dict_outcome_in_c_count=", dict_outcome_in_c_count, "\n")
+  message("dict_c_count=", dict_c_count, "")
+  message("dict_outcome_in_c_count=", dict_outcome_in_c_count, "")
 
   dict_outcome_ratio <- dict_outcome_in_c_count / dict_c_count
-  cat("dict_outcome_ratio=", dict_outcome_ratio, "\n")
+  message("dict_outcome_ratio=", dict_outcome_ratio, "")
 
   var_c <- list_onehot
   var_v <- data_v
   depend_y <- data_y
 
-  cat("analysis done!\n")
+  message("analysis done!")
   dict_p_value <- list()
   for (k1 in seq_len(num_clusters) - 1) {
     X_remove_k1 <- var_c
@@ -78,14 +78,14 @@ analysis_p_value_related_onlyc <- function(data_train, num_clusters, if_check = 
       slices_k1k2 <- setdiff(seq_len(ncol(var_c)), c(k1 + 1, k2))
       X_remove_k1k2 <- X_remove_k1k2[, slices_k1k2, drop = FALSE]
 
-      cat("---------\n")
-      cat("k1=", k1, ", k2=", k2 - 1, "\n")
-      cat("slices_k1=", slices_k1, "\n")
-      cat("slices_k1k2=", slices_k1k2, "\n")
+      message("---------")
+      message("k1=", k1, ", k2=", k2 - 1, "")
+      message("slices_k1=", slices_k1, "")
+      message("slices_k1k2=", slices_k1k2, "")
       p_value_k1k2 <- p_value_calculate(X_remove_k1, depend_y, 0, X_remove_k1k2)
       dict_p_value[[paste(k1, k2 - 1, sep = ",")]] <- p_value_k1k2
     }
   }
-  cat("dict_p_value only c=", unlist(dict_p_value), "\n")
-  cat("analysis done!\n")
+  message("dict_p_value only c=", unlist(dict_p_value), "")
+  message("analysis done!")
 }

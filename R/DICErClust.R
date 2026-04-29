@@ -1,4 +1,4 @@
-#' Main Function for Training and Evaluating a Deep Learning Model
+#' DICEr Function for Training and Evaluating a Deep Learning Model
 #'
 #' This function orchestrates the training and evaluation of a deep learning model, specifically for autoencoder-based representation learning followed by clustering and classification. It handles data loading, model training, testing, and saving the best model based on performance criteria.
 #'
@@ -26,7 +26,7 @@
 #' }
 #'
 #' @details
-#' The \code{main} function executes the following steps:
+#' The \code{DICEr} function executes the following steps:
 #' \enumerate{
 #'   \item Sets the random seed for reproducibility.
 #'   \item Loads and preprocesses the training and test datasets.
@@ -41,7 +41,7 @@
 #'   disk. Returns \code{NULL} invisibly.
 #' @import torch ggplot2
 #' @export
-main <- function(args) {
+DICEr <- function(args) {
   set.seed(args$seed)
 
   # Load data

@@ -56,13 +56,17 @@
 # @param x A tensor of shape \code{(batch_size, sequence_length, input_size)} representing the input data.
 # @param h A list containing the hidden state (\code{hn}) and cell state (\code{cn}) from the LSTM, typically passed from the encoder or previous decoder step.
 
+#' @return An \code{nn_module} object (torch LSTM-based encoder). When called
+#'   with a tensor of shape \code{(batch_size, seq_len, input_size)}, returns a
+#'   list of: (1) processed output tensor, (2) list of hidden and cell states
+#'   \code{(hn, cn)}, and (3) the input with a leading zero tensor prepended.
 #' @import torch
 #' @export
 
 
 
 
-EncoderRNN <- nn_module(
+EncoderRNN <- torch::nn_module(
   "EncoderRNN",
 
   initialize = function(input_size, nhidden, nlayers, dropout) {

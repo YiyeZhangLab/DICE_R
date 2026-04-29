@@ -4,86 +4,57 @@
 \alias{model_2}
 \title{model_2 Neural Network Module}
 \usage{
-model_2(
-  input_size,
-  nhidden,
-  nlayers,
-  dropout,
-  n_clusters,
-  n_dummy_demov_fea,
-  para_cuda
-)
+model_2(input_size, nhidden, nlayers, dropout, n_clusters, n_dummy_demov_fea, para_cuda)
+}
+\arguments{
+\item{input_size}{Integer. Number of features in the input data.}
+
+\item{nhidden}{Integer. Number of hidden units in each LSTM layer.}
+
+\item{nlayers}{Integer. Number of LSTM layers.}
+
+\item{dropout}{Numeric. Dropout probability between LSTM layers (0–1).}
+
+\item{n_clusters}{Integer. Number of clusters/classes.}
+
+\item{n_dummy_demov_fea}{Integer. Number of demographic dummy features.}
+
+\item{para_cuda}{Logical. Whether to use CUDA (GPU acceleration).
+
+The \code{forward()} method arguments:
+\code{"get_representation"}, \code{"classifier"},
+\code{"outcome_logistic_regression"}.}
+}
+\value{
+An \code{nn_module} object.
 }
 \description{
-A neural network module implementing a multi-functional model with encoder-decoder architecture using the \code{torch} package.
-The model supports autoencoding, representation learning, classification, and logistic regression with optional demographic feature input.
+A neural network module implementing a multi-functional model with
+encoder-decoder architecture using the \code{torch} package.
+The module is constructed using \code{nn_module()} and configured
+via its \code{initialize()} method.
 }
-\section{Usage}{
+\details{
+After initialization, the module can be used via
+\code{model$forward(x, function_name, demov = NULL, mask_BoolTensor = NULL)}.
 
-\preformatted{
-model_2 <- nn_module(
-  "model_2",
-
-  initialize = function(input_size, nhidden, nlayers, dropout, n_clusters, n_dummy_demov_fea, para_cuda) {
-    ...
-  },
-
-  init_weights = function() {
-    ...
-  },
-
-  forward = function(x, function_name, demov = NULL, mask_BoolTensor = NULL) {
-    ...
-  }
-)
+Arguments:
+\itemize{
+\item \code{x}: Input tensor.
+\item \code{function_name}: One of "autoencoder",
+"get_representation", "classifier",
+"outcome_logistic_regression".
+\item \code{demov}: Optional demographic tensor.
+\item \code{mask_BoolTensor}: Optional boolean mask tensor.
 }
 }
-
-\section{Methods}{
-
-\describe{
-\item{\code{initialize(input_size, nhidden, nlayers, dropout, n_clusters, n_dummy_demov_fea, para_cuda)}}{
-Initializes the model_2 module.
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{\\itemize\{
-  \\item\{\code{input_size}: A numeric value representing the number of features in the input data.\}
-  \\item\{\code{nhidden}: A numeric value representing the number of hidden units in each LSTM layer.\}
-  \\item\{\code{nlayers}: A numeric value indicating the number of LSTM layers.\}
-  \\item\{\code{dropout}: A numeric value between 0 and 1 indicating the dropout probability to be applied between LSTM layers.\}
-  \\item\{\code{n_clusters}: A numeric value representing the number of clusters (or classes) for the classifier.\}
-  \\item\{\code{n_dummy_demov_fea}: A numeric value indicating the number of dummy demographic features used in the logistic regression.\}
-  \\item\{\code{para_cuda}: A logical value indicating whether CUDA (GPU acceleration) should be used.\}
-\}
-}\if{html}{\out{</div>}}
-
-}
-
-\item{\code{init_weights()}}{
-Initializes the weights of the linear layers in the model with uniform random values and biases set to zero.
-}
-
-\item{\code{forward(x, function_name, demov = NULL, mask_BoolTensor = NULL)}}{
-Executes the forward pass of the model based on the specified function.
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{\\itemize\{
-  \\item\{\code{x}: A tensor of shape (batch_size, sequence_length, input_size) representing the input data.\}
-  \\item\{\code{function_name}: A character string indicating the type of operation to perform, one of \code{"autoencoder"}, \code{"get_representation"}, \code{"classifier"}, or \code{"outcome_logistic_regression"}.\}
-  \\item\{\code{demov}: (Optional) A tensor representing demographic feature data, used in logistic regression. Default is \code{NULL}.\}
-  \\item\{\code{mask_BoolTensor}: (Optional) A boolean tensor used to mask certain values during the logistic regression operation. Default is \code{NULL}.\}
-\}
-
-\\value\{
-  A list containing outputs depending on the chosen \code{function_name}:
-  \\itemize\{
-    \\item\{\code{"autoencoder"}: A list with encoded and decoded tensors.\}
-    \\item\{\code{"get_representation"}: A tensor representing the encoded input.\}
-    \\item\{\code{"classifier"}: A list with the encoded tensor and class probabilities.\}
-    \\item\{\code{"outcome_logistic_regression"}: A list containing the encoded tensor, decoded tensor, unactivated class scores, and logistic regression output.\}
-  \}
-\}
-}\if{html}{\out{</div>}}
-
+\examples{
+\donttest{
+if (requireNamespace("torch", quietly = TRUE)) {
+  mod <- model_2(
+    input_size = 10L, nhidden = 64L, nlayers = 2L, dropout = 0.1,
+    n_clusters = 3L, n_dummy_demov_fea = 2L, para_cuda = FALSE
+  )
 }
 }
 }
-

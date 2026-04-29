@@ -32,8 +32,8 @@
 
 # Define the update_testset_R_C_M_K function
 update_testset_R_C_M_K <- function(args, model, data_test, dataloader_test, data_train) {
-  cat("-----------------\n")
-  cat("    update_testset_R_C_M_K\n")
+  message("-----------------")
+  message("    update_testset_R_C_M_K")
 
   # Initialize final_embed tensor
   final_embed <- torch_randn(nrow(data_test$data_x), args$n_hidden_fea, dtype = torch_float())
@@ -74,13 +74,13 @@ update_testset_R_C_M_K <- function(args, model, data_test, dataloader_test, data
 
   # Update data_test attributes
   data_test$rep <- final_embed
-  cat("        update data_test R!\n")
+  message("        update data_test R!")
 
   data_test$n_cat <- data_train$n_cat
-  cat("        update data_test n_cat\n")
+  message("        update data_test n_cat")
 
   data_test$M <- data_train$M
-  cat("        update data_test M\n")
+  message("        update data_test M")
 
   # Update data_test.C
   representations <- data_test$rep
@@ -100,6 +100,6 @@ update_testset_R_C_M_K <- function(args, model, data_test, dataloader_test, data
   }
 
   data_test$pred_C <- pred_C
-  cat("        update pred data_test C\n")
+  message("        update pred data_test C")
   return(data_test)
 }
